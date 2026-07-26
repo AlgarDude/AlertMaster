@@ -9,11 +9,10 @@ I was able to get the GUI loading and refreshing, navTo working but hadn't tackl
 
 Alas we have this: 
 
-** AlertMaster ** with a Search GUI, Alert PopUp's and NavTo abilities for any mob in zone.
+** AlertMaster ** with Alert PopUps for tracked spawns, players and GMs.
 
 ** NEW Commands **
 
-* /am show will toggle the search window.
 * /am popup will toggle the alert popup window.
 * /am beep will toggle on and off beep notifications
 * /am doalert will toggle wether we want to see popup alert windows. default is false
@@ -22,16 +21,6 @@ Alas we have this:
 
 * beep=true|false default is false. turns on or off beep notifications for NPC spawns.
 * popup=true|false default is false. turns on or off popup alert notifications for NPC spawns. You can still /am popup to display the window if you have popup alerts turned off.
-
-** Search Window **
-
-* You can search with the search box
-* Sort by columns (Shift-Clicking Columns will MultiSort based onthe order you click.)
-* Clicking the check box for track, and the spawn will be added to spawnlist
-* Clicking ignore will remove the spawn from the list if it exists.
-* You can NavTo any spawn in the search window by clicking the button,
-* Right-Clicking the name will target the spawn.
-* Columns can be toggled on and off as well as re-arranged in the table.
 
 ** Alert PopUp Window **
 
@@ -42,6 +31,5 @@ Alas we have this:
 * The alert window will re-popup if there is something on it after that many seconds since last appearance.
 
 
-![alt text](https://github.com/grimmier378/AlertMaster/blob/info/searchGui.png)
 
 ![alt text](https://github.com/grimmier378/AlertMaster/blob/info/alertGui.png)
