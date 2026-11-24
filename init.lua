@@ -88,7 +88,7 @@ local CharConfig                                                                
 local CharCommands                                                                                                        = 'Commands'
 local newConfigFile                                                                                                       = string.format("%s/MyUI/AlertMaster/%s/Settings.lua",
     mq.configDir, Module.Server)
-local defaultConfig = {
+local defaultConfig                                                                                                       = {
     delay = 1,
     remind = 30,
     remindNPC = 5,
@@ -888,6 +888,12 @@ local function AlertTableSortSpecs(a, b)
             else
                 return 0
             end
+        elseif spec.ColumnUserID == Module.GUI_Alert.Table.Column_ID.MobID then
+            if a.MobID < b.MobID then
+                delta = -1
+            elseif a.MobID > b.MobID then
+                delta = 1
+            end
         end
         if delta ~= 0 then
             if spec.SortDirection == ImGuiSortDirection.Ascending then
@@ -949,7 +955,7 @@ local function collect_players()
         if (spawn.ID() or 0) == myId then return false end
         return spawn.Type() == 'PC' or (spawn.GM() or false)
     end)
-    numDisplayPlayers = 0
+    local playerCount = 0
     for i = 1, #found do
         local spawn = found[i]
         local name = spawn.DisplayName()
@@ -967,17 +973,19 @@ local function collect_players()
                 isGM = isGM,
             }
             zoneWide[name] = entry
-            numDisplayPlayers = numDisplayPlayers + 1
+            playerCount = playerCount + 1
             if isGM then gmPlayers[name] = entry end
             if entry.distance <= radius and (spawn.DistanceU() or 0) <= zradius then
                 inRadius[name] = entry
             end
         end
     end
+    local sorted = {}
+    for _, entry in pairs(zoneWide) do sorted[#sorted + 1] = entry end
+    table.sort(sorted, function(a, b) return a.distance < b.distance end)
     displayTablePlayers = zoneWide
-    sortedPlayers = {}
-    for _, entry in pairs(zoneWide) do sortedPlayers[#sortedPlayers + 1] = entry end
-    table.sort(sortedPlayers, function(a, b) return a.distance < b.distance end)
+    sortedPlayers = sorted
+    numDisplayPlayers = playerCount
     return zoneWide, inRadius, gmPlayers
 end
 
@@ -1327,15 +1335,13 @@ local function DrawAlertRuleRow(entry)
         end
     end
     ImGui.TableSetColumnIndex(1)
-    ImGui.PushStyleColor(ImGuiCol.Text, Module.Colors.color(entry.MobConColor))
-    ImGui.Text(entry.MobLvl)
-    ImGui.PopStyleColor()
-
-    ImGui.TableSetColumnIndex(2)
     local distance = math.floor(spawn.Distance() or -1)
     ImGui.PushStyleColor(ImGuiCol.Text, ColorDistance(distance))
     ImGui.Text('%s', tostring(distance))
     ImGui.PopStyleColor()
+
+    ImGui.TableSetColumnIndex(2)
+    ImGui.Text('%s', tostring(entry.MobID))
 end
 local btnIconDel = Module.Icons.MD_DELETE
 
@@ -1646,8 +1652,8 @@ local function BuildAlertRows() -- Build the Button Rows for the GUI Window
         if ImGui.BeginTable("AlertTable", 3, Module.GUI_Alert.Table.Flags) then
             ImGui.TableSetupScrollFreeze(0, 1)
             ImGui.TableSetupColumn("Name", bit32.bor(ImGuiTableColumnFlags.DefaultSort, ImGuiTableColumnFlags.WidthFixed), 90, Module.GUI_Alert.Table.Column_ID.MobName)
-            ImGui.TableSetupColumn("Lvl", bit32.bor(ImGuiTableColumnFlags.DefaultSort, ImGuiTableColumnFlags.WidthFixed), 30, Module.GUI_Alert.Table.Column_ID.MobLvl)
             ImGui.TableSetupColumn("Dist", bit32.bor(ImGuiTableColumnFlags.DefaultSort, ImGuiTableColumnFlags.WidthFixed), 50, Module.GUI_Alert.Table.Column_ID.MobDist)
+            ImGui.TableSetupColumn("ID", bit32.bor(ImGuiTableColumnFlags.DefaultSort, ImGuiTableColumnFlags.WidthFixed), 60, Module.GUI_Alert.Table.Column_ID.MobID)
             ImGui.TableHeadersRow()
             local sortSpecsAlerts = ImGui.TableGetSortSpecs()
 
@@ -1729,11 +1735,9 @@ function DrawAlertGUI() -- Draw GUI Window
                     BuildAlertRows()
                     ImGui.EndTabItem()
                 end
-                if numDisplayPlayers > 0 and not check_safe_zone() then
-                    if ImGui.BeginTabItem(string.format('Players (%d)###PlayersTab', numDisplayPlayers)) then
-                        BuildPlayerRows()
-                        ImGui.EndTabItem()
-                    end
+                if ImGui.BeginTabItem(string.format('Players (%d)###PlayersTab', numDisplayPlayers)) then
+                    BuildPlayerRows()
+                    ImGui.EndTabItem()
                 end
                 ImGui.EndTabBar()
             end
